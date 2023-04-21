@@ -1,0 +1,23 @@
+{
+    "name": "Template Extension",
+    "description": "Template Extension Description",
+    "version": "0.0.1",
+    "manifest_version": 3,
+    "permissions": [
+        "storage",
+        "activeTab",
+        "tabs",
+        "scripting",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "http://*/",
+        "https://*/"
+    ],
+    "action": {
+        "default_title": "Hello "
+    },
+    "background": {
+        "service_worker": "backgroundScript.js"
+    }
+}
