@@ -1,5 +1,5 @@
 /*
-    command: click / type
+    command: click / type / open
     target: xpath
     value: string value in case of type command
 */

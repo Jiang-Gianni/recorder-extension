@@ -1,4 +1,4 @@
-<script lang="ts">
+<!-- <script lang="ts">
     import {
         getTabs,
         activateListenerOnTab,
@@ -52,4 +52,4 @@
         display: flex;
         flex-direction: row;
     }
-</style>
+</style> -->

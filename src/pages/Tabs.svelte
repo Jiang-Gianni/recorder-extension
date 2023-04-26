@@ -4,13 +4,23 @@
         getTabs,
         activateListenerOnTab,
         listenToNewChannel,
+        tabId,
+        commandList,
     } from "../functions/chrome";
+    import { Command } from "../types/command";
 
     var promiseTabs = getTabs();
+
+    listenToNewChannel();
+
     function reload() {
         promiseTabs = getTabs();
     }
-    listenToNewChannel();
+
+    function insertFirstCommand(url: string) {
+        var cmd = new Command("open", "", url);
+        commandList.set([cmd]);
+    }
 </script>
 
 <main on:keydown>
@@ -24,7 +34,9 @@
                     on:keydown
                     on:click={() => {
                         activateListenerOnTab(tab["id"]);
+                        insertFirstCommand(tab["url"]);
                         status.set(2);
+                        tabId.set(tab["id"]);
                     }}>ID {tab["id"]}</button
                 >
                 <div>URL {tab["url"]}</div>

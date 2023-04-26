@@ -1,4 +1,4 @@
-export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, testClickChan, currentCommand }
+export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, testClickChan, currentCommand, tabId }
 
 import { writable } from "svelte/store";
 import { Command } from "../types/command";
@@ -6,6 +6,7 @@ import { Command } from "../types/command";
 //@ts-ignore
 var isChrome = typeof chrome.tabs != "undefined";
 
+const tabId = writable<number>();
 const commandList = writable<Command[]>([]);
 const currentCommand = writable<Command>(new Command("", "", ""));
 var localCurrentCommand: Command
@@ -39,22 +40,31 @@ function listenToNewChannel() {
         //@ts-ignore
         chrome.runtime.onConnect.addListener(function (port) {
             console.log("Connected to port ", port.name);
-            var isSaveClickChan = port.name == "save-click-channel"
-            var isTestClickChan = port.name == "test-click-channel"
-            var isConfirmClickChan = port.name == "confirm-click-channel"
-            if (isTestClickChan) {
+            var isSaveChan = port.name == "save-channel"
+            var isTestChan = port.name == "test-channel"
+            var isConfirmChan = port.name == "confirm-channel"
+            var isInputChan = port.name == "input-channel"
+            var isClickChan = port.name == "click-channel"
+            if (isTestChan) {
                 testClickChan.set(port)
             }
-
             port.onMessage.addListener(function (msg) {
-                if (isSaveClickChan) {
-                    localCurrentCommand = new Command("click", msg, "")
-                    currentCommand.set(localCurrentCommand)
-                } else if (isConfirmClickChan) {
-                    commandList.update((prev) => [...prev, localCurrentCommand])
-                } else if (isTestClickChan) {
-                    port.postMessage(localCurrentCommand.target)
+                if (isClickChan || isInputChan) {
+                    var cmd = new Command(msg["command"], msg["target"], msg["value"])
+                    commandList.update((prev) => [...prev, cmd])
+                    window.scrollTo(0, document.body.scrollHeight);
                 }
+                // if (isSaveChan) {
+                //     localCurrentCommand = new Command(msg["command"], msg["target"], msg["value"])
+                //     currentCommand.set(localCurrentCommand)
+                // } else if (isConfirmChan) {
+                //     commandList.update((prev) => [...prev, localCurrentCommand])
+                // } else if (isTestChan) {
+                //     port.postMessage(localCurrentCommand.target)
+                // } else if (isInputChan) {
+                //     localCurrentCommand.value = msg
+                //     currentCommand.set(localCurrentCommand)
+                // }
             });
         });
         return true;
