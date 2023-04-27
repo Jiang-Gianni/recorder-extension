@@ -1,26 +1,47 @@
-// var saveChan = chrome.runtime.connect({ name: "save-channel" });
-// var confirmChan = chrome.runtime.connect({ name: "confirm-channel" });
 var testChan = chrome.runtime.connect({ name: "test-channel" });
 var inputChan = chrome.runtime.connect({ name: "input-channel" });
 var clickChan = chrome.runtime.connect({ name: "click-channel" });
+var findTextChan = chrome.runtime.connect({ name: "find-text-channel" });
+var keyChan = chrome.runtime.connect({ name: "key-channel" });
+var parentPathChan = chrome.runtime.connect({ name: "parent-path-channel" });
+
+const testBorder = "aquamarine solid 3px";
 
 testChan.onMessage.addListener(function (msg) {
     testXpath(msg)
 })
 
-const testBorder = "aquamarine solid 3px";
+parentPathChan.onMessage.addListener(function (msg) {
+    var el = getElementByXpath(msg)
+    console.log("CURRENT ELEMENT ", el);
+    if (el != null) {
+        var parent = el.parentElement;
+        var parentPath = getPathTo(parent);
+        console.log("PARENT PATH ", parentPath);
+        parentPathChan.postMessage(parentPath)
+    } else {
+        parentPathChan.postMessage("NOT FOUND")
+    }
+})
+
+findTextChan.onMessage.addListener(function (msg) {
+    var first = "//*[contains(text(), '"
+    var second = "')]"
+    var path = first + msg + second
+    var el = getElementByXpath(path)
+    console.log("TEXT ELEMENT ", el);
+    if (el != null) {
+        first = first.replace('*', el.tagName)
+        findTextChan.postMessage(first + msg + second)
+    } else {
+        findTextChan.postMessage("NOT FOUND")
+    }
+})
 
 function getElementByXpath(path) {
-    console.log(document.evaluate(
+    return window.document.evaluate(
         path,
-        document,
-        null,
-        XPathResult.FIRST_ORDERED_NODE_TYPE,
-        null
-    ));
-    return document.evaluate(
-        path,
-        document,
+        window.document,
         null,
         XPathResult.FIRST_ORDERED_NODE_TYPE,
         null
@@ -29,7 +50,7 @@ function getElementByXpath(path) {
 
 async function testXpath(xpath) {
     let el = getElementByXpath(xpath);
-    console.log("XPATH ", xpath);
+    console.log(xpath);
     console.log("FOUND ", el);
     var tmpBorder = el.style.border;
     el.style.border = testBorder;
@@ -37,8 +58,8 @@ async function testXpath(xpath) {
     el.style.border = tmpBorder ?? ""
 }
 
-function getPathTo(element) {
-    if (element.id !== "") return 'id("' + element.id + '")';
+function getPathTo(element, deep = 0) {
+    if (element.id !== "") return "//" + element.tagName + "[@id='" + element.id + "']";
     if (element === document.body) return "//" + element.tagName.toLowerCase();
     var ix = 0;
     var siblings = element.parentNode.children;
@@ -65,7 +86,34 @@ let isInputting = false;
 
 window.addEventListener("mouseover", (e) => htmlEl = e.target)
 
+/**
+ * @param {HTMLElement} element The date
+ */
+function getInputFileElement(element) {
+    if (isInputFileElement(element)) {
+        console.log("Function ", element);
+        return element
+    }
+    var children = element.children
+    for (let index = 0; index < children.length; index++) {
+        const child = children[index];
+        return getInputFileElement(child)
+    }
+    return null
+}
+
+/**
+ * @param {HTMLElement} element The date
+ */
+function isInputFileElement(element) {
+    return element.tagName == "INPUT" && element.getAttribute("type") == "file"
+}
+
 window.addEventListener("mousedown", (e) => {
+    // Register only left clicks
+    if (e.button != 0) {
+        return
+    }
     if (isInputting) {
         return
     }
@@ -73,6 +121,7 @@ window.addEventListener("mousedown", (e) => {
         { "command": "click", "target": getPathTo(e.target), "value": "" },
     )
 })
+
 window.addEventListener("keydown", (e) => {
     if (isInputting) {
         var text = inputValue.join('')
@@ -96,42 +145,25 @@ window.addEventListener("keydown", (e) => {
                 console.log("Text: ", inputValue.join(''));
                 break;
         }
+    } else if (e.key == "Control") {
+        console.log("Input Type Text Mode");
+        isInputting = true;
+        textInputEl = htmlEl;
+    } else if (e.code == "KeyU") {
+        var inputFile = getInputFileElement(htmlEl)
+        if (inputFile == null) {
+            console.log("Input file not found");
+            return
+        }
+        var xpath = getPathTo(inputFile);
+        console.log(xpath);
+        if (xpath) {
+            inputChan.postMessage({ "command": "upload", "target": getPathTo(getInputFileElement(htmlEl)), "value": "" },)
+        }
     } else {
-        if (e.key == "Control") {
-            console.log("Input Type Text Mode");
-            isInputting = true;
-            textInputEl = htmlEl;
-        } else if (e.code == "KeyU") {
-            saveChan.postMessage({ "command": "type", "target": getPathTo(getInputFileElement(htmlEl)), "value": "./text.txt" },)
+        var keyList = ["Enter", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"]
+        if (keyList.includes(e.code)) {
+            keyChan.postMessage({ "command": "key", "target": getPathTo(htmlEl), "value": e.code },)
         }
     }
 })
-
-
-// var el = document.getElementById("file-upload")
-var el = document.getElementsByTagName("form").item(0)
-
-/**
- * @param {HTMLElement} element The date
- */
-function getInputFileElement(element) {
-    if (isInputFileElement(element)) {
-        console.log(element);
-        return element
-    }
-    var children = element.children
-    for (let index = 0; index < children.length; index++) {
-        const child = children[index];
-        getInputFileElement(child)
-    }
-}
-
-/**
- * @param {HTMLElement} element The date
- */
-function isInputFileElement(element) {
-    return element.tagName == "INPUT" && element.getAttribute("type") == "file"
-}
-
-
-// getInputFileElement(el)

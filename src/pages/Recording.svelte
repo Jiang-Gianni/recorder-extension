@@ -1,28 +1,23 @@
 <script lang="ts">
   import {
     commandList,
-    testClickChan,
-    currentCommand,
     tabId,
     activateListenerOnTab,
+    testXpath,
+    findTextXpath,
+    foundTextXpath,
+    findParentXpath,
   } from "../functions/chrome";
   import { status } from "../main";
   import { createXpathUrl } from "../functions/crud";
   import type { Command } from "../types/command";
   $: url = createXpathUrl($commandList);
-  function testXpath(cmd: Command) {
-    if (cmd.target == "" || cmd.target == null || cmd.target == undefined) {
-      return;
-    }
-    //@ts-ignore
-    $testClickChan.postMessage(cmd.target.trim());
-  }
   function setStatus(n: number) {
     status.set(n);
   }
   function deleteCommandAtIndex(index: number) {
     commandList.update((prev) => {
-      return prev.filter((cmd, i) => {
+      return prev.filter((_, i) => {
         return i != index;
       });
     });
@@ -33,9 +28,15 @@
       return prev;
     });
   }
+  function updateCommandFileName(index: number, e) {
+    var fileName: string = e.target.value.split("\\").slice(-1)[0];
+    commandList.update((prev) => {
+      prev[index].value = fileName;
+      return prev;
+    });
+  }
+  var findText: string = "";
 </script>
-
-<div>{JSON.stringify($commandList)}</div>
 
 <div class="recording">
   <button
@@ -44,13 +45,7 @@
     }}>TAB ID {$tabId}</button
   >
 
-  <!-- <div
-    on:mouseenter={() => {
-      testXpath($currentCommand);
-    }}
-  >
-    CURRENT COMMAND {JSON.stringify($currentCommand)}
-  </div> -->
+  <div>{JSON.stringify($commandList)}</div>
   {#each $commandList as command, index}
     <div
       class="command"
@@ -58,23 +53,89 @@
         testXpath(command);
       }}
     >
+      <div>{command.command}</div>
+
       <textarea
-        class="json"
-        value={JSON.stringify(command)}
+        style="width: 40%;"
+        value={command.target}
         on:change={(e) => {
-          updateCommandAtIndex(index, JSON.parse(e.target["value"]));
+          command.target = e.target["value"];
+          updateCommandAtIndex(index, command);
         }}
       />
+
+      <textarea
+        style="width: 40%;"
+        value={command.value}
+        on:change={(e) => {
+          command.value = e.target["value"];
+          updateCommandAtIndex(index, command);
+        }}
+      />
+
+      <input
+        type="file"
+        id="upload"
+        style="display: {command.command == 'upload' ? '' : 'none'};"
+        on:change={(e) => {
+          updateCommandFileName(index, e);
+        }}
+      />
+
       <button
         style="background-color: red;"
+        title="DELETE"
         on:click={() => {
           deleteCommandAtIndex(index);
         }}
       >
-        DELETE
+        X
+      </button>
+
+      <button
+        hidden={command.target == "" || command.target == null}
+        style="background-color: aquamarine;"
+        title="PARENT XPATH"
+        on:click={() => {
+          findParentXpath(index, command.target);
+        }}
+      >
+        ^
+      </button>
+
+      <button
+        hidden={command.parentPath == "" || command.parentPath == null}
+        style="background-color: green;"
+        title="COPY {command.parentPath}"
+        on:click={() => {
+          navigator.clipboard.writeText(command.parentPath);
+        }}
+      >
+        //
       </button>
     </div>
   {/each}
+
+  <div class="find-text">
+    <textarea
+      style="width: 70%;"
+      placeholder="Type the inner text of the element and press FIND"
+      value={findText}
+      on:change={(e) => {
+        findText = e.target["value"];
+      }}
+    />
+
+    <button
+      on:click={() => {
+        findTextXpath(findText);
+      }}>FIND</button
+    >
+
+    <div hidden={$foundTextXpath == undefined}>
+      {$foundTextXpath}
+    </div>
+  </div>
 
   <a href={url} download="asrt.json">
     <button> DOWNLOAD </button>
@@ -96,6 +157,14 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+    margin: 10px;
+    padding: 10px;
+  }
+  .find-text {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
     margin: 10px;
     padding: 10px;
   }

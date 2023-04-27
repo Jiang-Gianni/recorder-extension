@@ -1,4 +1,4 @@
-export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, testClickChan, currentCommand, tabId }
+export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, tabId, testXpath, findTextXpath, foundTextXpath, findParentXpath }
 
 import { writable } from "svelte/store";
 import { Command } from "../types/command";
@@ -8,10 +8,12 @@ var isChrome = typeof chrome.tabs != "undefined";
 
 const tabId = writable<number>();
 const commandList = writable<Command[]>([]);
-const currentCommand = writable<Command>(new Command("", "", ""));
-var localCurrentCommand: Command
+const foundTextXpath = writable<string>()
+const parentXpathList = writable<string[]>([])
 
-const testClickChan = writable<Object>();
+var testXpath = function (cmd: Object) { }
+var findTextXpath = function (text: string) { }
+var findParentXpath = function (index: number, text: string) { }
 
 async function getTabs() {
     if (isChrome) {
@@ -27,7 +29,7 @@ function activateListenerOnTab(tabId: number) {
     if (isChrome) {
         //@ts-ignore
         chrome.scripting.executeScript({
-            target: { tabId: tabId, allFrames: true },
+            target: { tabId: tabId, allFrames: false },
             files: ["activateListener.js"],
         });
         return;
@@ -40,32 +42,60 @@ function listenToNewChannel() {
         //@ts-ignore
         chrome.runtime.onConnect.addListener(function (port) {
             console.log("Connected to port ", port.name);
-            var isSaveChan = port.name == "save-channel"
+            var isFindTextChan = port.name == "find-text-channel"
             var isTestChan = port.name == "test-channel"
-            var isConfirmChan = port.name == "confirm-channel"
             var isInputChan = port.name == "input-channel"
             var isClickChan = port.name == "click-channel"
+            var isKeyChan = port.name == "key-channel"
+            var isParentPathChan = port.name == "parent-path-channel"
+
             if (isTestChan) {
-                testClickChan.set(port)
+                testXpath = function (cmd: Object) {
+                    if (
+                        cmd["target"] == "" ||
+                        cmd["target"] == null ||
+                        cmd["target"] == undefined
+                    ) {
+                        return;
+                    }
+                    //@ts-ignore
+                    port.postMessage(cmd["target"].trim());
+                }
             }
-            port.onMessage.addListener(function (msg) {
-                if (isClickChan || isInputChan) {
+
+            if (isParentPathChan) {
+                findParentXpath = function (index: number, currentPath: string) {
+                    //@ts-ignore
+                    port.postMessage(currentPath);
+                    //@ts-ignore
+                    port.onMessage.addListener((msg) => {
+                        commandList.update((prev) => {
+                            prev[index].parentPath = msg
+                            return prev
+                        })
+                    })
+                }
+            }
+
+            if (isFindTextChan) {
+                findTextXpath = function (textToFind: string) {
+                    //@ts-ignore
+                    port.postMessage(textToFind);
+                    //@ts-ignore
+                    port.onMessage.addListener((msg) => {
+                        foundTextXpath.set(msg)
+                    })
+                }
+            }
+
+            if (isClickChan || isInputChan || isKeyChan) {
+                port.onMessage.addListener(function (msg) {
                     var cmd = new Command(msg["command"], msg["target"], msg["value"])
                     commandList.update((prev) => [...prev, cmd])
                     window.scrollTo(0, document.body.scrollHeight);
-                }
-                // if (isSaveChan) {
-                //     localCurrentCommand = new Command(msg["command"], msg["target"], msg["value"])
-                //     currentCommand.set(localCurrentCommand)
-                // } else if (isConfirmChan) {
-                //     commandList.update((prev) => [...prev, localCurrentCommand])
-                // } else if (isTestChan) {
-                //     port.postMessage(localCurrentCommand.target)
-                // } else if (isInputChan) {
-                //     localCurrentCommand.value = msg
-                //     currentCommand.set(localCurrentCommand)
-                // }
-            });
+                });
+            }
+
         });
         return true;
     }
