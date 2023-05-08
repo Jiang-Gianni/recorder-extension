@@ -1,4 +1,4 @@
-export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, tabId, testXpath, findTextXpath, foundTextXpath, findParentXpath }
+export { activateListenerOnTab, getTabs, listenToNewChannel, commandList, tabId, testXpath, findTextXpath, foundTextXpath, clearLog }
 
 import { writable } from "svelte/store";
 import { Command } from "../types/command";
@@ -9,11 +9,10 @@ var isChrome = typeof chrome.tabs != "undefined";
 const tabId = writable<number>();
 const commandList = writable<Command[]>([]);
 const foundTextXpath = writable<string>()
-const parentXpathList = writable<string[]>([])
 
 var testXpath = function (cmd: Object) { }
 var findTextXpath = function (text: string) { }
-var findParentXpath = function (index: number, text: string) { }
+var clearLog = function () { }
 
 async function getTabs() {
     if (isChrome) {
@@ -47,7 +46,7 @@ function listenToNewChannel() {
             var isInputChan = port.name == "input-channel"
             var isClickChan = port.name == "click-channel"
             var isKeyChan = port.name == "key-channel"
-            var isParentPathChan = port.name == "parent-path-channel"
+            var isClearLog = port.name == "clear-log-channel"
 
             if (isTestChan) {
                 testXpath = function (cmd: Object) {
@@ -63,17 +62,10 @@ function listenToNewChannel() {
                 }
             }
 
-            if (isParentPathChan) {
-                findParentXpath = function (index: number, currentPath: string) {
+            if (isClearLog) {
+                clearLog = function () {
                     //@ts-ignore
-                    port.postMessage(currentPath);
-                    //@ts-ignore
-                    port.onMessage.addListener((msg) => {
-                        commandList.update((prev) => {
-                            prev[index].parentPath = msg
-                            return prev
-                        })
-                    })
+                    port.postMessage("a");
                 }
             }
 

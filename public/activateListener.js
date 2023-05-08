@@ -3,25 +3,19 @@ var inputChan = chrome.runtime.connect({ name: "input-channel" });
 var clickChan = chrome.runtime.connect({ name: "click-channel" });
 var findTextChan = chrome.runtime.connect({ name: "find-text-channel" });
 var keyChan = chrome.runtime.connect({ name: "key-channel" });
-var parentPathChan = chrome.runtime.connect({ name: "parent-path-channel" });
+var clearLogChan = chrome.runtime.connect({ name: "clear-log-channel" });
 
 const testBorder = "aquamarine solid 3px";
 
-testChan.onMessage.addListener(function (msg) {
-    testXpath(msg)
+const specialKeys = ["Enter", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"];
+
+clearLogChan.onMessage.addListener(function (msg) {
+    console.log("CLEARING")
+    console.clear()
 })
 
-parentPathChan.onMessage.addListener(function (msg) {
-    var el = getElementByXpath(msg)
-    console.log("CURRENT ELEMENT ", el);
-    if (el != null) {
-        var parent = el.parentElement;
-        var parentPath = getPathTo(parent);
-        console.log("PARENT PATH ", parentPath);
-        parentPathChan.postMessage(parentPath)
-    } else {
-        parentPathChan.postMessage("NOT FOUND")
-    }
+testChan.onMessage.addListener(function (msg) {
+    testXpath(msg)
 })
 
 findTextChan.onMessage.addListener(function (msg) {
@@ -54,11 +48,11 @@ async function testXpath(xpath) {
     console.log("FOUND ", el);
     var tmpBorder = el.style.border;
     el.style.border = testBorder;
-    await new Promise(r => setTimeout(r, 500));
+    await new Promise(r => setTimeout(r, 100));
     el.style.border = tmpBorder ?? ""
 }
 
-function getPathTo(element, deep = 0) {
+function getPathTo(element) {
     if (element.id !== "") return "//" + element.tagName + "[@id='" + element.id + "']";
     if (element === document.body) return "//" + element.tagName.toLowerCase();
     var ix = 0;
@@ -122,6 +116,16 @@ window.addEventListener("mousedown", (e) => {
     )
 })
 
+window.addEventListener("keyup", (e) => {
+    if (isInputting) {
+        return;
+    } else {
+        if (specialKeys.includes(e.code)) {
+            keyChan.postMessage({ "command": "key", "target": getPathTo(htmlEl), "value": e.code },)
+        }
+    }
+})
+
 window.addEventListener("keydown", (e) => {
     if (isInputting) {
         var text = inputValue.join('')
@@ -159,11 +163,6 @@ window.addEventListener("keydown", (e) => {
         console.log(xpath);
         if (xpath) {
             inputChan.postMessage({ "command": "upload", "target": getPathTo(getInputFileElement(htmlEl)), "value": "" },)
-        }
-    } else {
-        var keyList = ["Enter", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"]
-        if (keyList.includes(e.code)) {
-            keyChan.postMessage({ "command": "key", "target": getPathTo(htmlEl), "value": e.code },)
         }
     }
 })

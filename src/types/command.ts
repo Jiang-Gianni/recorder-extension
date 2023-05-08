@@ -11,6 +11,5 @@ class Command {
         public command: string,
         public target: string,
         public value: string,
-        public parentPath: string = "",
     ) { }
 }

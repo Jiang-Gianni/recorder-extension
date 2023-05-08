@@ -81,3 +81,8 @@ window.addEventListener("keydown", (e) => {
         );
     }
 })
+
+
+window.addEventListener("keyup", (e) => {
+    console.log(e.code);
+})

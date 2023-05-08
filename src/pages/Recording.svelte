@@ -6,10 +6,10 @@
     testXpath,
     findTextXpath,
     foundTextXpath,
-    findParentXpath,
+    clearLog,
   } from "../functions/chrome";
   import { status } from "../main";
-  import { createXpathUrl } from "../functions/crud";
+  import { createXpathUrl, generateCmdJson } from "../functions/crud";
   import type { Command } from "../types/command";
   $: url = createXpathUrl($commandList);
   function setStatus(n: number) {
@@ -36,6 +36,7 @@
     });
   }
   var findText: string = "";
+  var findPath: string = "";
 </script>
 
 <div class="recording">
@@ -45,7 +46,6 @@
     }}>TAB ID {$tabId}</button
   >
 
-  <div>{JSON.stringify($commandList)}</div>
   {#each $commandList as command, index}
     <div
       class="command"
@@ -93,22 +93,10 @@
       </button>
 
       <button
-        hidden={command.target == "" || command.target == null}
-        style="background-color: aquamarine;"
-        title="PARENT XPATH"
-        on:click={() => {
-          findParentXpath(index, command.target);
-        }}
-      >
-        ^
-      </button>
-
-      <button
-        hidden={command.parentPath == "" || command.parentPath == null}
         style="background-color: green;"
-        title="COPY {command.parentPath}"
+        title="COPY JSON LIST"
         on:click={() => {
-          navigator.clipboard.writeText(command.parentPath);
+          navigator.clipboard.writeText(generateCmdJson([command]));
         }}
       >
         //
@@ -132,14 +120,55 @@
       }}>FIND</button
     >
 
-    <div hidden={$foundTextXpath == undefined}>
+    <div
+      hidden={$foundTextXpath == undefined}
+      on:mouseenter={() => {
+        testXpath({ target: $foundTextXpath });
+      }}
+    >
       {$foundTextXpath}
     </div>
   </div>
 
-  <a href={url} download="asrt.json">
-    <button> DOWNLOAD </button>
-  </a>
+  <div class="find-text">
+    <textarea
+      style="width: 70%;"
+      placeholder="Type the xpath and mouse over it to test the element presence"
+      value={findPath}
+      on:mouseenter={() => {
+        testXpath({ target: findPath });
+      }}
+      on:change={(e) => {
+        findPath = e.target["value"];
+      }}
+    />
+  </div>
+
+  <div class="download">
+    <button
+      on:click={() => {
+        clearLog();
+      }}
+    >
+      CLEAR LOGS
+    </button>
+  </div>
+
+  <div class="download">
+    <a href={url} download="asrt.json">
+      <button> DOWNLOAD </button>
+    </a>
+    <button
+      style="background-color: green;"
+      title="COPY JSON LIST"
+      on:click={() => {
+        navigator.clipboard.writeText(generateCmdJson($commandList));
+      }}
+    >
+      //
+    </button>
+  </div>
+
   <button
     on:click={() => {
       setStatus(1);
@@ -167,9 +196,5 @@
     justify-content: center;
     margin: 10px;
     padding: 10px;
-  }
-  .json {
-    margin: 10px;
-    width: 100%;
   }
 </style>
