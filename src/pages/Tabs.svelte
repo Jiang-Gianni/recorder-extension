@@ -23,6 +23,13 @@
     }
 </script>
 
+<button>
+    <a href="/text.txt" target="_blank">HELLO</a>
+</button>
+<button>
+    <a href="https://www.google.com" target="_blank">HELLO</a>
+</button>
+
 <main on:keydown>
     <button on:click={reload}>RELOAD TABS</button>
     {#await promiseTabs}

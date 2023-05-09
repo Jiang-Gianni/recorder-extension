@@ -1,0 +1,41 @@
+Paragraph
+//LABEL[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/TEXTAREA[@role='textbox']
+//TEXTAREA[@role='textbox']/parent::DIV/parent::DIV/preceding-sibling::DIV/LABEL
+
+par.parentElement.parentElement.previousSibling.firstChild
+
+Text Integer Decimal
+//LABEL[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/INPUT[@type='text']
+
+
+Date
+//LABEL[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV/INPUT[@type='text']
+
+Date Time (Date)
+//SPAN[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV[1]/DIV/DIV/INPUT[@type='text']
+
+MultipleDropdown
+//SPAN[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV[@role='combobox']
+
+
+CardChoice Text Justified
+//SPAN[contains(text(),'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV/*/DIV/DIV/DIV[2]/DIV/DIV/DIV/DIV[2]/DIV/P/SPAN[contains(text(), 'INSERIRE_OPZIONE')]
+
+CardChoice Text Stacked
+//SPAN[contains(text(),'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV/*/DIV/DIV/DIV/DIV/DIV[2]/DIV/P[contains(text(), 'INSERIRE_OPZIONE')]
+
+RadioButton
+//SPAN[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/*/LABEL[contains(text(), 'INSERIRE_OPZIONE')]
+
+Checkbox
+//SPAN[contains(text(), 'INSERIRE_LABEL')]/parent::DIV/following-sibling::DIV/DIV/DIV/*/LABEL[contains(text(), 'INSERIRE_OPZIONE')]
+
+LinkField
+//A[contains(text(), 'INSERIRE_TESTO_LINK')]
+
+ButtonWidget
+//BUTTON[contains(text(), 'INSERIRE_LABEL')]
+
+RecordAction
+//BUTTON[./SPAN[contains(text(), 'INSERIRE_LABEL')]]
+//A[./SPAN[contains(text(), 'INSERIRE_LABEL')]]

@@ -111,8 +111,11 @@ window.addEventListener("mousedown", (e) => {
     if (isInputting) {
         return
     }
+    console.log(e.target);
+    console.log(getAppianPathTo(e.target));
+    var xPath = getAppianPathTo(e.target) ?? getPathTo(e.target)
     clickChan.postMessage(
-        { "command": "click", "target": getPathTo(e.target), "value": "" },
+        { "command": "click", "target": xPath, "value": "" },
     )
 })
 
@@ -121,7 +124,8 @@ window.addEventListener("keyup", (e) => {
         return;
     } else {
         if (specialKeys.includes(e.code)) {
-            keyChan.postMessage({ "command": "key", "target": getPathTo(htmlEl), "value": e.code },)
+            var xPath = getAppianPathTo(htmlEl) ?? getPathTo(htmlEl)
+            keyChan.postMessage({ "command": "key", "target": xPath, "value": e.code },)
         }
     }
 })
@@ -132,8 +136,9 @@ window.addEventListener("keydown", (e) => {
         switch (e.key) {
             case "Control":
                 console.log("Registered Text: ", text)
+                var xPath = getAppianPathTo(textInputEl) ?? getPathTo(textInputEl)
                 inputChan.postMessage(
-                    { "command": "type", "target": getPathTo(textInputEl), "value": text },
+                    { "command": "type", "target": xPath, "value": text },
                 )
                 isInputting = false
                 inputValue = []

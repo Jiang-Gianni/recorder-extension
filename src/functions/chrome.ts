@@ -31,6 +31,11 @@ function activateListenerOnTab(tabId: number) {
             target: { tabId: tabId, allFrames: false },
             files: ["activateListener.js"],
         });
+        //@ts-ignore
+        chrome.scripting.executeScript({
+            target: { tabId: tabId, allFrames: false },
+            files: ["appianElements.js"],
+        });
         return;
     }
     console.log("No Chrome for you");
