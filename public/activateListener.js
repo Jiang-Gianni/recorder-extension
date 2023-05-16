@@ -10,7 +10,6 @@ const testBorder = "aquamarine solid 3px";
 const specialKeys = ["Enter", "ArrowUp", "ArrowLeft", "ArrowDown", "ArrowRight"];
 
 clearLogChan.onMessage.addListener(function (msg) {
-    console.log("CLEARING")
     console.clear()
 })
 
@@ -112,7 +111,6 @@ window.addEventListener("mousedown", (e) => {
         return
     }
     console.log(e.target);
-    console.log(getAppianPathTo(e.target));
     var xPath = getAppianPathTo(e.target) ?? getPathTo(e.target)
     clickChan.postMessage(
         { "command": "click", "target": xPath, "value": "" },
