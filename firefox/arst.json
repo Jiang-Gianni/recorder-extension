@@ -1,0 +1,31 @@
+{
+    "name": "Template Extension",
+    "description": "Template Extension Description",
+    "version": "0.0.1",
+    "manifest_version": 3,
+    "permissions": [
+        "storage",
+        "activeTab",
+        "tabs",
+        "scripting",
+        "contextMenus"
+    ],
+    "host_permissions": [
+        "http://*/",
+        "https://*/"
+    ],
+    "action": {
+        "default_title": "Registrazione Comandi"
+    },
+    "background": {
+        "scripts": [
+            "backgroundScript.js"
+        ]
+    },
+    "browser_specific_settings": {
+        "gecko": {
+            "id": "addon@example.com",
+            "strict_min_version": "42.0"
+        }
+    }
+}

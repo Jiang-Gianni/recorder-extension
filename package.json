@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && xcopy dist firefox\\ /S /Y && del firefox\\manifest.json && cd firefox && ren firefox.json manifest.json && cd .. && jar cfvM firefox.zip -C firefox .",
     "watch": "vite build --watch",
     "preview": "vite preview",
     "check": "svelte-check --tsconfig ./tsconfig.json"

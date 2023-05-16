@@ -10,7 +10,7 @@
   } from "../functions/chrome";
   import { status } from "../main";
   import { createXpathUrl, generateCmdJson } from "../functions/crud";
-  import type { Command } from "../types/command";
+  import { Command } from "../types/command";
   $: url = createXpathUrl($commandList);
   function setStatus(n: number) {
     status.set(n);
@@ -28,15 +28,13 @@
       return prev;
     });
   }
-  function updateCommandFileName(index: number, e) {
-    var fileName: string = e.target.value.split("\\").slice(-1)[0];
-    commandList.update((prev) => {
-      prev[index].value = fileName;
-      return prev;
-    });
+  function insertNewCommand(newCmd: Command) {
+    commandList.update((prev) => [...prev, newCmd]);
   }
+  var actionList = ["click", "type", "key", "open"];
   var findText: string = "";
   var findPath: string = "";
+  var newCmd: Command = new Command("", "", "");
 </script>
 
 <div class="recording">
@@ -70,15 +68,6 @@
         on:change={(e) => {
           command.value = e.target["value"];
           updateCommandAtIndex(index, command);
-        }}
-      />
-
-      <input
-        type="file"
-        id="upload"
-        style="display: {command.command == 'upload' ? '' : 'none'};"
-        on:change={(e) => {
-          updateCommandFileName(index, e);
         }}
       />
 
@@ -142,6 +131,42 @@
         findPath = e.target["value"];
       }}
     />
+  </div>
+
+  <!-- NEW COMMAND  -->
+  <div class="find-text">
+    <!-- ACTION  -->
+    {#each actionList as action}
+      <label>
+        <input
+          type="radio"
+          bind:group={newCmd.command}
+          name={action}
+          value={action}
+        />{action}</label
+      >
+    {/each}
+    <!-- XPATH  -->
+    <textarea
+      placeholder="XPath"
+      value={newCmd.target}
+      on:change={(e) => {
+        newCmd.target = e.target["value"];
+      }}
+    />
+    <!-- VALUE  -->
+    <textarea
+      placeholder="Value"
+      value={newCmd.value}
+      on:change={(e) => {
+        newCmd.value = e.target["value"];
+      }}
+    />
+    <button
+      on:click={() => {
+        insertNewCommand(newCmd);
+      }}>INSERT COMMAND</button
+    >
   </div>
 
   <div class="download">
